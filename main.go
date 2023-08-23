@@ -24,6 +24,8 @@ func init() {
 
 func main() {
 	r := gin.Default()
+	r.LoadHTMLGlob("templates/**")
+	r.GET("/", c.Home)
 	r.POST("/shorten", c.ShortenURL)
 	r.GET("/:slug", c.ResolveURL)
 	r.Run(":8080")

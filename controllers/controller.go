@@ -30,6 +30,10 @@ func isValidUrl(str string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
+func Home(c *gin.Context) {
+	c.HTML(200, "index.html", nil)
+}
+
 func contains[T comparable](s []T, e T) bool {
 	for _, a := range s {
 		if a == e {
