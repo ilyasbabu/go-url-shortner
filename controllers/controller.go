@@ -1,12 +1,11 @@
 package controllers
 
 import (
-	"math/rand"
-	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ilyasbabu/go-url-shortner/models"
+	"github.com/ilyasbabu/go-url-shortner/utils"
 	"gorm.io/gorm"
 )
 
@@ -16,31 +15,8 @@ func SetDB(d *gorm.DB) {
 	db = d
 }
 
-func genrateSlug() string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, 8)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-func isValidUrl(str string) bool {
-	u, err := url.Parse(str)
-	return err == nil && u.Scheme != "" && u.Host != ""
-}
-
 func Home(c *gin.Context) {
 	c.HTML(200, "index.html", nil)
-}
-
-func contains[T comparable](s []T, e T) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func updateExpiredURLs() {
@@ -50,7 +26,7 @@ func updateExpiredURLs() {
 
 func ShortenURL(c *gin.Context) {
 	urlText := c.PostForm("value")
-	if !isValidUrl(urlText) {
+	if !utils.IsValidUrl(urlText) {
 		c.JSON(400, gin.H{
 			"data": "Invalid URL",
 		})
@@ -59,9 +35,9 @@ func ShortenURL(c *gin.Context) {
 	dateBeforeSevenDays := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 	var slugs []string
 	db.Model(&models.URLs{}).Pluck("slug", &slugs).Where("created_at > ?", dateBeforeSevenDays)
-	slug := genrateSlug()
-	for contains(slugs, slug) {
-		slug = genrateSlug()
+	slug := utils.GenrateSlug()
+	for utils.Contains(slugs, slug) {
+		slug = utils.GenrateSlug()
 	}
 	go updateExpiredURLs()
 	db.Create(&models.URLs{Slug: slug, Url: urlText, Active: true})
